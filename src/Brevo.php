@@ -22,6 +22,9 @@ class Brevo
         $this->contactsApi = $contactsApi ?? $this->createDefaultContactsApi();
     }
 
+    /**
+     * @return \Brevo\Client\Api\ContactsApi
+     */
     private function createDefaultContactsApi(): ContactsApi
     {
         $config = Configuration::getDefaultConfiguration()
@@ -30,11 +33,21 @@ class Brevo
         return new ContactsApi(new Client, $config);
     }
 
+    /**
+     * @param \Brevo\Client\Api\ContactsApi $contactsApi
+     *
+     * @return void
+     */
     public function setContactsApi(ContactsApi $contactsApi): void
     {
         $this->contactsApi = $contactsApi;
     }
 
+    /**
+     * @param string $email
+     *
+     * @return \Brevo\Client\Model\GetExtendedContactDetails|null
+     */
     public function getContactInfo(string $email): ?GetExtendedContactDetails
     {
         try {
@@ -46,7 +59,14 @@ class Brevo
         }
     }
 
-    public function subscribe(string $email, string $listId, array $attributes = []): bool
+    /**
+     * @param string $email
+     * @param integer $listId
+     * @param array $attributes
+     *
+     * @return bool
+     */
+    public function subscribe(string $email, int $listId, array $attributes = []): bool
     {
         try {
             // Check if contact exists
@@ -76,7 +96,7 @@ class Brevo
             // Subscribe to list
             $addContactToList = new AddContactToList;
             $addContactToList->setEmails([$email]);
-            $this->contactsApi->addContactToList($listId, $addContactToList);
+            $this->contactsApi->addContactToList( $listId, $addContactToList);
 
             return true;
         } catch (ApiException $e) {
@@ -86,7 +106,13 @@ class Brevo
         }
     }
 
-    public function unsubscribe(string $email, string $listId): bool
+    /**
+     * @param string $email
+     * @param integer $listId
+     *
+     * @return bool
+     */
+    public function unsubscribe(string $email, int $listId): bool
     {
         try {
             $this->removeContactFromList($email, $listId);
@@ -103,14 +129,13 @@ class Brevo
     /**
      * @throws \Brevo\Client\ApiException
      */
-    private function createOrUpdateContact(string $email, array $attributes): void
+    public function createOrUpdateContact(string $email, array $attributes): void
     {
         try {
             $this->updateExistingContact($email, $attributes);
         } catch (ApiException $e) {
             if ($e->getCode() === 404) {
                 $this->createNewContact($email, $attributes);
-
                 return;
             }
             throw $e;
@@ -134,7 +159,7 @@ class Brevo
     /**
      * @throws \Brevo\Client\ApiException
      */
-    private function createNewContact(string $email, array $attributes): void
+    public function createNewContact(string $email, array $attributes): void
     {
         $createContact = new CreateContact;
         $createContact->setEmail($email);
@@ -149,9 +174,9 @@ class Brevo
     /**
      * @throws \Brevo\Client\ApiException
      */
-    private function addContactToList(string $email, string $listId): void
+    public function addContactToList(string $email, int $listId): void
     {
-        $listRequest = new AddContactToList;
+        $listRequest = new AddContactToList();
         $listRequest->setEmails([$email]);
         $this->contactsApi->addContactToList($listId, $listRequest);
     }
@@ -159,13 +184,20 @@ class Brevo
     /**
      * @throws \Brevo\Client\ApiException
      */
-    private function removeContactFromList(string $email, string $listId): void
+    private function removeContactFromList(string $email, int $listId): void
     {
         $listRequest = new RemoveContactFromList;
         $listRequest->setEmails([$email]);
         $this->contactsApi->removeContactFromList($listId, $listRequest);
     }
 
+    /**
+     * @param \Brevo\Client\ApiException $e
+     * @param string $context
+     * @param bool $isWarning
+     *
+     * @return void
+     */
     private function handleApiException(ApiException $e, string $context, bool $isWarning = false): void
     {
         $logMethod = $isWarning ? 'warning' : 'error';

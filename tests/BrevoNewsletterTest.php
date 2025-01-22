@@ -47,7 +47,7 @@ test('returns null when contact is not found', function () {
 
 test('subscribes new contact with attributes', function () {
     $email = 'new@example.com';
-    $listId = 'list-123';
+    $listId = 144;
     $attributes = ['name' => 'John Doe'];
 
     // Mock the initial contact check (contact doesn't exist)
@@ -82,7 +82,7 @@ test('subscribes new contact with attributes', function () {
 
 test('updates existing contact and subscribes', function () {
     $email = 'existing@example.com';
-    $listId = 'list-456';
+    $listId = 456;
     $attributes = ['name' => 'Updated Name'];
 
     // Mock the initial contact check (contact exists)
@@ -120,14 +120,14 @@ test('handles subscription errors gracefully', function () {
 
     Log::shouldReceive('error')->once();
 
-    $result = $this->brevo->subscribe('error@example.com', 'list-123');
+    $result = $this->brevo->subscribe('error@example.com', 144);
 
     expect($result)->toBeFalse();
 });
 
 test('unsubscribes contact successfully', function () {
     $email = 'user@example.com';
-    $listId = 'list-789';
+    $listId = 789;
 
     $this->contactsApi->shouldReceive('removeContactFromList')
         ->once()
@@ -146,7 +146,7 @@ test('handles non-existent contact in unsubscribe as success', function () {
 
     Log::shouldReceive('warning')->once();
 
-    $result = $this->brevo->unsubscribe('missing@example.com', 'list-123');
+    $result = $this->brevo->unsubscribe('missing@example.com', 144);
 
     expect($result)->toBeTrue();
 });
@@ -157,10 +157,12 @@ test('handles unsubscribe errors appropriately', function () {
 
     Log::shouldReceive('error')->once();
 
-    $result = $this->brevo->unsubscribe('error@example.com', 'list-123');
+    $result = $this->brevo->unsubscribe('error@example.com', 144);
 
     expect($result)->toBeFalse();
 });
+
+
 
 afterEach(function () {
     Mockery::close();
