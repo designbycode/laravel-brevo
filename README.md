@@ -95,7 +95,7 @@ To unsubscribe a contact from a mailing list:
 ```php
 use Designbycode\LaravelBrevo\Facades\Brevo;
 
-$success = Brevo::unsubscribe('test@example.com', 'list-123');
+$success = Brevo::unsubscribe('test@example.com', $listId);
 
 if ($success) {
     echo "Contact unsubscribed successfully!";
@@ -109,12 +109,12 @@ if ($success) {
 * Retrieves contact details for the specified email.
 * Returns `null` if the contact is not found.
 
-`Brevo::subscribe(string $email, string $listId, array $attributes = []): bool`
+`Brevo::subscribe(string $email, int $listId, array $attributes = []): bool`
 * Subscribes a contact to a mailing list.
 * Creates a new contact if they don't exist, or updates an existing contact.
 * Returns `true` on success, `false` on failure.
 
-`Brevo::unsubscribe(string $email, string $listId): bool`
+`Brevo::unsubscribe(string $email, int $listId): bool`
 * Unsubscribes a contact from a mailing list.
 * Returns `true` on success, `false` on failure.
 

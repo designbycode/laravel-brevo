@@ -1,6 +1,7 @@
 {
     "name": "designbycode/laravel-brevo",
     "description": "wrapper for brevo-php",
+    "version": "1.0.0",
     "keywords": [
         "Designbycode",
         "laravel",
@@ -72,6 +73,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
