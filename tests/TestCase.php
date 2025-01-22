@@ -2,9 +2,9 @@
 
 namespace Designbycode\LaravelBrevo\Tests;
 
+use Designbycode\LaravelBrevo\BrevoServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Designbycode\LaravelBrevo\BrevoServiceProvider;
 
 class TestCase extends Orchestra
 {

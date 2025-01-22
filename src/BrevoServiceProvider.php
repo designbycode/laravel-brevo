@@ -2,9 +2,9 @@
 
 namespace Designbycode\LaravelBrevo;
 
+use Designbycode\LaravelBrevo\Commands\BrevoCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Designbycode\LaravelBrevo\Commands\BrevoCommand;
 
 class BrevoServiceProvider extends PackageServiceProvider
 {
@@ -17,9 +17,7 @@ class BrevoServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-brevo')
-            ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel_brevo_table')
-            ->hasCommand(BrevoCommand::class);
+            ->hasConfigFile();
+        //            ->hasCommand(BrevoCommand::class);
     }
 }
