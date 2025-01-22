@@ -1,19 +1,33 @@
-# wrapper for brevo-php
-
+## Overview
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/designbycode/laravel-brevo.svg?style=flat-square)](https://packagist.org/packages/designbycode/laravel-brevo)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/designbycode/laravel-brevo/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/designbycode/laravel-brevo/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/designbycode/laravel-brevo/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/designbycode/laravel-brevo/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/designbycode/laravel-brevo.svg?style=flat-square)](https://packagist.org/packages/designbycode/laravel-brevo)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+The LaravelBrevo package is a Laravel wrapper for integrating with the Brevo API (formerly Sendinblue). It simplifies interactions with Brevo's email marketing and contact management features, allowing you to manage contacts, subscribe/unsubscribe users, and retrieve contact information seamlessly within your Laravel application.
+
+This version of the documentation demonstrates how to use the package via the Facade for cleaner and more expressive code.
+
+
+## Use Cases
+This package is ideal for:
+1. Email Marketing:
+   * Subscribe users to mailing lists.
+   * Unsubscribe users from mailing lists.
+   * Update user attributes (e.g., name, preferences).
+
+2. Contact Management:
+   * Retrieve contact details.
+   * Create or update contacts in Brevo.
+
+3. Automation:
+   * Automatically add new users to Brevo lists during registration.
+   * Sync user data between your application and Brevo.
+
 
 ## Support us
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/laravel-brevo.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/laravel-brevo)
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
 
 ## Installation
 
@@ -23,38 +37,102 @@ You can install the package via composer:
 composer require designbycode/laravel-brevo
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="laravel-brevo-migrations"
-php artisan migrate
-```
-
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-brevo-config"
+php artisan vendor:publish --tag="laravel-brevo-config" 
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
+Add your Brevo API key to the .env file:
 
 ```bash
-php artisan vendor:publish --tag="laravel-brevo-views"
+BREVO_API_KEY=your-api-key
 ```
+
+## Configuration
+```php
+return [
+    'api_key' => env('BREVO_API_KEY', ''),
+];
+````
+api_key: Your Brevo API key. This is required to authenticate API requests.
+
+
 
 ## Usage
+### Retrieve Contact Information.
+
+To retrieve details for a specific contact by email:
+```php
+use Designbycode\LaravelBrevo\Facades\Brevo;
+
+$contact = Brevo::getContactInfo('test@example.com');
+
+if ($contact) {
+    echo "Contact Name: " . $contact->getAttributes()->name;
+} else {
+    echo "Contact not found.";
+}
+```
+### Subscribe a Contact
+To subscribe a contact to a mailing list:
 
 ```php
-$laravelBrevo = new Designbycode\LaravelBrevo();
-echo $laravelBrevo->echoPhrase('Hello, Designbycode!');
+use Designbycode\LaravelBrevo\Facades\Brevo;
+
+$contact = Brevo::getContactInfo('test@example.com');
+
+if ($contact) {
+    echo "Contact Name: " . $contact->getAttributes()->name;
+} else {
+    echo "Contact not found.";
+}
 ```
+
+### Unsubscribe a Contact
+To unsubscribe a contact from a mailing list:
+
+```php
+use Designbycode\LaravelBrevo\Facades\Brevo;
+
+$success = Brevo::unsubscribe('test@example.com', 'list-123');
+
+if ($success) {
+    echo "Contact unsubscribed successfully!";
+} else {
+    echo "Failed to unsubscribe contact.";
+}
+```
+
+### Methods
+`Brevo::getContactInfo(string $email): ?GetExtendedContactDetails`
+* Retrieves contact details for the specified email.
+* Returns `null` if the contact is not found.
+
+`Brevo::subscribe(string $email, string $listId, array $attributes = []): bool`
+* Subscribes a contact to a mailing list.
+* Creates a new contact if they don't exist, or updates an existing contact.
+* Returns `true` on success, `false` on failure.
+
+`Brevo::unsubscribe(string $email, string $listId): bool`
+* Unsubscribes a contact from a mailing list.
+* Returns `true` on success, `false` on failure.
+
+### Error Handling
+The package handles API errors gracefully:
+* 404 Not Found: Logs a warning and returns `null` or `false`.
+* 500 Server Error: Logs an error and returns `false`.
+* Other exceptions are logged and handled appropriately.
+
+
+
+
+
+
+
+
+
+
 
 ## Testing
 
