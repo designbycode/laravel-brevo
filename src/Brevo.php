@@ -12,35 +12,66 @@ use Brevo\Client\Model\RemoveContactFromList;
 use Brevo\Client\Model\UpdateContact;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
+use phpDocumentor\Reflection\Types\Integer;
 
 class Brevo
 {
     private ContactsApi $contactsApi;
 
-    public function __construct(?ContactsApi $contactsApi = null)
+    public function __construct()
     {
-        $this->contactsApi = $contactsApi ?? $this->createDefaultContactsApi();
+        $config = Configuration::getDefaultConfiguration()->setApiKey('api-key', config('brevo.api_key'));
+        $this->contactsApi = new ContactsApi(new Client(), $config);
     }
 
     /**
-     * @return \Brevo\Client\Api\ContactsApi
-     */
-    private function createDefaultContactsApi(): ContactsApi
-    {
-        $config = Configuration::getDefaultConfiguration()
-            ->setApiKey('api-key', config('brevo.api_key'));
-
-        return new ContactsApi(new Client, $config);
-    }
-
-    /**
-     * @param \Brevo\Client\Api\ContactsApi $contactsApi
+     * @param string $email
+     * @param int $listId
+     * @param array $attributes
      *
-     * @return void
+     * @return bool
      */
-    public function setContactsApi(ContactsApi $contactsApi): void
+    public function subscribe(string $email, int $listId, array $attributes = []): bool
     {
-        $this->contactsApi = $contactsApi;
+        try {
+            // Check if contact exists, update if so, otherwise create
+            try {
+                $contact = $this->contactsApi->getContactInfo($email);
+                $updateContact = new UpdateContact();
+
+                //add or update  attributes
+                if (!empty($attributes)) {
+                    $updateContact->setAttributes((object)$attributes);
+                }
+
+                $this->contactsApi->updateContact($email, $updateContact);
+
+
+            } catch (ApiException $e) {
+                if ($e->getCode() == 404) {
+                    $createContact = new CreateContact();
+                    $createContact->setEmail($email);
+                    //add attributes when creating new contact
+                    if (!empty($attributes)) {
+                        $createContact->setAttributes((object)$attributes);
+                    }
+                    $this->contactsApi->createContact($createContact);
+                } else {
+                    $this->handleApiException($e, 'Contact not found');
+                    return false;
+                }
+            }
+
+            // Subscribe contact to list
+            $addContactToList = new AddContactToList();
+            $addContactToList->setEmails([$email]);
+            $this->contactsApi->addContactToList($listId, $addContactToList);
+            return true;
+
+        } catch (ApiException $e) {
+            $this->handleApiException($e, 'Subscription failed');
+            return false;
+        }
     }
 
     /**
@@ -52,144 +83,34 @@ class Brevo
     {
         try {
             return $this->contactsApi->getContactInfo($email);
+
         } catch (ApiException $e) {
             $this->handleApiException($e, 'Contact not found', $e->getCode() === 404);
-
             return null;
         }
+
     }
+
 
     /**
      * @param string $email
-     * @param integer $listId
-     * @param array $attributes
-     *
-     * @return bool
-     */
-    public function subscribe(string $email, int $listId, array $attributes = []): bool
-    {
-        try {
-            // Check if contact exists
-            try {
-                $this->contactsApi->getContactInfo($email);
-
-                // Contact exists - update
-                $updateContact = new UpdateContact;
-                if (! empty($attributes)) {
-                    $updateContact->setAttributes((object) $attributes);
-                }
-                $this->contactsApi->updateContact($email, $updateContact);
-            } catch (ApiException $e) {
-                if ($e->getCode() == 404) {
-                    // Contact doesn't exist - create
-                    $createContact = new CreateContact;
-                    $createContact->setEmail($email);
-                    if (! empty($attributes)) {
-                        $createContact->setAttributes((object) $attributes);
-                    }
-                    $this->contactsApi->createContact($createContact);
-                } else {
-                    throw $e;
-                }
-            }
-
-            // Subscribe to list
-            $addContactToList = new AddContactToList;
-            $addContactToList->setEmails([$email]);
-            $this->contactsApi->addContactToList( $listId, $addContactToList);
-
-            return true;
-        } catch (ApiException $e) {
-            Log::error('Brevo API Exception: '.$e->getMessage());
-
-            return false;
-        }
-    }
-
-    /**
-     * @param string $email
-     * @param integer $listId
+     * @param int $listId
      *
      * @return bool
      */
     public function unsubscribe(string $email, int $listId): bool
     {
         try {
-            $this->removeContactFromList($email, $listId);
-
+            $removeContactFromList = new RemoveContactFromList();
+            $removeContactFromList->setEmails([$email]);
+            $this->contactsApi->removeContactFromList($listId, $removeContactFromList);
             return true;
         } catch (ApiException $e) {
-            $success = $e->getCode() === 404;
-            $this->handleApiException($e, 'Unsubscribe failed', $success);
-
-            return $success;
+            $this->handleApiException($e, 'Brevo API Warning: User not found in list - ', $e->getCode() === 404);
+            return false;
         }
     }
 
-    /**
-     * @throws \Brevo\Client\ApiException
-     */
-    public function createOrUpdateContact(string $email, array $attributes): void
-    {
-        try {
-            $this->updateExistingContact($email, $attributes);
-        } catch (ApiException $e) {
-            if ($e->getCode() === 404) {
-                $this->createNewContact($email, $attributes);
-                return;
-            }
-            throw $e;
-        }
-    }
-
-    /**
-     * @throws \Brevo\Client\ApiException
-     */
-    private function updateExistingContact(string $email, array $attributes): void
-    {
-        $updateContact = new UpdateContact;
-
-        if (! empty($attributes)) {
-            $updateContact->setAttributes((object) $attributes);
-        }
-
-        $this->contactsApi->updateContact($email, $updateContact);
-    }
-
-    /**
-     * @throws \Brevo\Client\ApiException
-     */
-    public function createNewContact(string $email, array $attributes): void
-    {
-        $createContact = new CreateContact;
-        $createContact->setEmail($email);
-
-        if (! empty($attributes)) {
-            $createContact->setAttributes((object) $attributes);
-        }
-
-        $this->contactsApi->createContact($createContact);
-    }
-
-    /**
-     * @throws \Brevo\Client\ApiException
-     */
-    public function addContactToList(string $email, int $listId): void
-    {
-        $listRequest = new AddContactToList();
-        $listRequest->setEmails([$email]);
-        $this->contactsApi->addContactToList($listId, $listRequest);
-    }
-
-    /**
-     * @throws \Brevo\Client\ApiException
-     */
-    private function removeContactFromList(string $email, int $listId): void
-    {
-        $listRequest = new RemoveContactFromList;
-        $listRequest->setEmails([$email]);
-        $this->contactsApi->removeContactFromList($listId, $listRequest);
-    }
 
     /**
      * @param \Brevo\Client\ApiException $e
