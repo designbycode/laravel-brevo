@@ -23,8 +23,9 @@ class Brevo
         $this->contactsApi = new ContactsApi(new Client, $config);
     }
 
-    public function subscribe(string $email, int $listId, array $attributes = []): bool
+    public function subscribe(string $email, ?int $listId = null, array $attributes = []): bool
     {
+        $listId ??= config('brevo.default_list_id');
         try {
             // Check if contact exists, update if so, otherwise create
             try {
@@ -81,8 +82,9 @@ class Brevo
 
     }
 
-    public function unsubscribe(string $email, int $listId): bool
+    public function unsubscribe(string $email, ?int $listId = null): bool
     {
+        $listId ??= config('brevo.default_list_id');
         try {
             $removeContactFromList = new RemoveContactFromList;
             $removeContactFromList->setEmails([$email]);
