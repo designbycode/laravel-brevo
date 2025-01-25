@@ -40,7 +40,7 @@ composer require designbycode/laravel-brevo
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="laravel-brevo-config" 
+php artisan vendor:publish --tag="brevo" 
 ```
 
 Add your Brevo API key to the .env file:
@@ -66,9 +66,7 @@ To retrieve details for a specific contact by email:
 ```php
 use Designbycode\LaravelBrevo\Facades\Brevo;
 
-$contact = Brevo::getContactInfo('test@example.com');
-
-if ($contact) {
+if ($contact = Brevo::getContactInfo('test@example.com')) {
     echo "Contact Name: " . $contact->getAttributes()->name;
 } else {
     echo "Contact not found.";
@@ -79,13 +77,10 @@ To subscribe a contact to a mailing list:
 
 ```php
 use Designbycode\LaravelBrevo\Facades\Brevo;
-
-$contact = Brevo::getContactInfo('test@example.com');
-
-if ($contact) {
-    echo "Contact Name: " . $contact->getAttributes()->name;
+if ($success = Brevo::subscribe('test@example.com', $listId)) {
+    echo "Contact subscribed successfully!";
 } else {
-    echo "Contact not found.";
+    echo "Failed to subscribe contact.";
 }
 ```
 
@@ -95,9 +90,7 @@ To unsubscribe a contact from a mailing list:
 ```php
 use Designbycode\LaravelBrevo\Facades\Brevo;
 
-$success = Brevo::unsubscribe('test@example.com', $listId);
-
-if ($success) {
+if ($success = Brevo::unsubscribe('test@example.com', $listId)) {
     echo "Contact unsubscribed successfully!";
 } else {
     echo "Failed to unsubscribe contact.";
