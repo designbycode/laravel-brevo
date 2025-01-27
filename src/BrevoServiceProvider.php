@@ -17,7 +17,7 @@ class BrevoServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('laravel-brevo')
-            ->hasConfigFile();
+            ->hasConfigFile('brevo');
         //            ->hasCommand(BrevoCommand::class);
     }
 }

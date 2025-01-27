@@ -1,0 +1,7 @@
+{
+    "preset": "laravel",
+    "align_multiline_comments": true,
+    "multiline_comment_opening_closing": true,
+    "phpdoc_to_comment": false,
+    "single_line_comment_spacing": true
+}

@@ -98,6 +98,39 @@ class Brevo
         }
     }
 
+    public function emailExists(string $email, ?int $listId = null): bool
+    {
+        $listId ??= config('brevo.default_list_id');
+        try {
+            // Retrieve contacts in the specified list
+            $contacts = $this->contactsApi->getContactsFromList($listId);
+
+            // Check if the email exists in the retrieved contacts
+            foreach ($contacts->getContacts() as $contact) {
+                if ($contact->getEmail() === $email) {
+                    return true; // Email exists in the list
+                }
+            }
+
+            return false; // Email does not exist in the list
+        } catch (ApiException $e) {
+            // Handle API exceptions
+            $this->handleApiException($e, 'Error checking if email exists in list');
+
+            return false; // Return false in case of errors
+        }
+    }
+
+    /**
+     * @throws \Brevo\Client\ApiException
+     */
+    public function getList($listId = null, $startDate = null, $endDate = null): \Brevo\Client\Model\GetExtendedList
+    {
+        $listId ??= config('brevo.default_list_id');
+
+        return $this->contactsApi->getList($listId, $startDate, $endDate);
+    }
+
     private function handleApiException(ApiException $e, string $context, bool $isWarning = false): void
     {
         $logMethod = $isWarning ? 'warning' : 'error';
